@@ -1,3 +1,4 @@
+######llama.py
 from contextlib import nullcontext
 from typing import Optional, Tuple
 import math
@@ -44,7 +45,9 @@ class RMSNorm(torch.nn.Module):
             torch.Tensor: The normalized tensor.
         """
         # todo
-        raise NotImplementedError
+        mean_square = x.pow(2).mean(dim=-1, keepdim=True)
+        rms = torch.rsqrt(mean_square + self.eps)
+        return x * rms
 
     def forward(self, x):
         """
@@ -94,7 +97,13 @@ class Attention(nn.Module):
         attention matrix before applying it to the value tensor.
         '''
         # todo
-        raise NotImplementedError
+        scores = torch.matmul(query, key.transpose(-2,-1))
+        # bs * n_heads * seq_len * seq_len
+        scores = scores/math.sqrt(self.head_dim)
+        attn = torch.softmax(scores, dim=-1)
+        attn = self.attn_dropout(attn)
+        output = torch.matmul(attn, value)
+        return output
 
     def forward(
         self,
@@ -197,7 +206,13 @@ class LlamaLayer(nn.Module):
            output of the feed-forward network
         '''
         # todo
-        raise NotImplementedError
+        norm_x = self.attention_norm(x)
+        attn_out = self.attention(norm_x)
+        h = x + attn_out
+        norm_h = self.ffn_norm(h)
+        ffn_out = self.feed_forward(norm_h)
+        out = h + ffn_out
+        return out 
 
 class Llama(LlamaPreTrainedModel):
     def __init__(self, config: LlamaConfig):
@@ -274,11 +289,12 @@ class Llama(LlamaPreTrainedModel):
             logits, _ = self(idx_cond)
             logits = logits[:, -1, :] # crop to just the final time step
             # todo
-            raise NotImplementedError
+            
 
             if temperature == 0.0:
                 # select the single most likely index
-                idx_next = None
+                # greedy decoding
+                idx_next = torch.argmax(logits, dim=-1, keepdim=True)
             else:
                 '''
                 Perform temperature sampling:
@@ -289,7 +305,10 @@ class Llama(LlamaPreTrainedModel):
 
                 Note that we are not using top-k sampling/nucleus sampling in this procedure.
                 '''
-                idx_next = None
+                logits = logits/temperature
+                probs = F.softmax(logits, dim=-1)
+                
+                idx_next = torch.multinomial(probs, num_samples=1)
             # append sampled index to the running sequence and continue
             idx = torch.cat((idx, idx_next), dim=1)
 
