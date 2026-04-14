@@ -131,7 +131,7 @@ def save_model(model, optimizer, args, config, filepath):
 	print(f"save the model to {filepath}")
 
 def train(args):
-	device = torch.device('cuda') if args.use_gpu else torch.device('cpu')
+	torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
 	#### Load data
 	# create the data and its corresponding datasets and dataloader
 	tokenizer = Tokenizer(args.max_sentence_len)
@@ -198,7 +198,7 @@ def train(args):
 
 def generate_sentence(args, prefix, outfile, max_new_tokens = 75, temperature = 0.0):
 	with torch.no_grad():
-		device = torch.device('cuda') if args.use_gpu else torch.device('cpu')
+		torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
 		ctx = torch.amp.autocast(device_type="cuda", dtype=torch.float32) if args.use_gpu else nullcontext()
 		llama = load_pretrained(args.pretrained_model_path)
 		llama = llama.to(device)
@@ -233,7 +233,7 @@ def test_with_prompting(args):
 
 	with torch.no_grad():
 
-		device = torch.device('cuda') if args.use_gpu else torch.device('cpu')
+		torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
 		#### Load data
 		# create the data and its corresponding datasets and dataloader
 		tokenizer = Tokenizer(args.max_sentence_len)
