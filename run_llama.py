@@ -275,7 +275,7 @@ def test(args):
 	assert args.dev_out.endswith("dev-finetuning-output.txt"), 'For saving finetuning results, please set the dev_out argument as "<dataset>-dev-finetuning-output.txt"'
 	assert args.test_out.endswith("test-finetuning-output.txt"), 'For saving finetuning results, please set the test_out argument as "<dataset>-test-finetuning-output.txt"'
 	with torch.no_grad():
-		device = torch.device('cuda') if args.use_gpu else torch.device('cpu')
+		torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
 		saved = torch.load(args.filepath)
 		config = saved['model_config']
 		model = LlamaEmbeddingClassifier(config)
@@ -321,7 +321,6 @@ def get_args():
 	parser.add_argument("--hidden_dropout_prob", type=float, default=0.3)
 	parser.add_argument("--lr", type=float, help="learning rate, default lr for 'pretrain': 1e-3, 'finetune': 1e-5",
 						default=2e-5)
-	parser.add_argument("--use_gpu", action='store_true')
 	args = parser.parse_args()
 	print(f"args: {vars(args)}")
 	return args
