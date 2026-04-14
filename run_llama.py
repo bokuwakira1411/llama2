@@ -275,7 +275,7 @@ def test(args):
 	assert args.dev_out.endswith("dev-finetuning-output.txt"), 'For saving finetuning results, please set the dev_out argument as "<dataset>-dev-finetuning-output.txt"'
 	assert args.test_out.endswith("test-finetuning-output.txt"), 'For saving finetuning results, please set the test_out argument as "<dataset>-test-finetuning-output.txt"'
 	with torch.no_grad():
-		torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
+		device = torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
 		saved = torch.load(args.filepath, weights_only=False)
 		config = saved['model_config']
 		model = LlamaEmbeddingClassifier(config)
